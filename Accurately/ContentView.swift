@@ -13,8 +13,9 @@ struct ContentView: View {
         case Options
         case AmortizationSchedule
     }
-    @State var displayNumber = 0.0
+    @State var displayNumber = "0.00"
     @State var viewMode = ViewMode.Calculator
+    @State var textOperator = "operator"
     
     var body: some View {
         let lineColor = Color(hue: 1.0, saturation: 0.0, brightness: 0.8)
@@ -34,7 +35,7 @@ struct ContentView: View {
                                 .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, idealWidth: 250, maxWidth: 280, minHeight: 50, idealHeight: 70, maxHeight: 70, alignment: .bottomTrailing)
                                 .padding(10.0)
                                 .overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
-                            Text("operator")
+                            Text(textOperator)
                                 .font(.title2)
                                 .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, idealWidth: 250, maxWidth: 280, minHeight: 50, idealHeight: 70, maxHeight: 70, alignment: .topLeading)
                                 .padding(10.0)
@@ -44,7 +45,9 @@ struct ContentView: View {
                     }
                     brick
                     HStack(alignment: .bottom) {
-                        Button("　CPT　", action:{}).font(.headline).foregroundColor(.orange)
+                        Button("　CPT　", action:{
+                            textOperator = "Computed"
+                        }).font(.headline).foregroundColor(.orange)
                             .padding(.leading,29) .padding(.trailing,29).padding(.top, 19).padding(.bottom,19)
                             .overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
                         Button("STO", action:{}).font(.headline).foregroundColor(.orange).padding(13).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
@@ -71,7 +74,9 @@ struct ContentView: View {
                         Spacer()
                         VStack(alignment: .leading){
                             HStack{
-                                Button("７", action:{}).font(.title).foregroundColor(.black).padding(.leading,26) .padding(.trailing,26).padding(.top, 22).padding(.bottom,22).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
+                                Button("７", action:{
+                                    
+                                }).font(.title).foregroundColor(.black).padding(.leading,26) .padding(.trailing,26).padding(.top, 22).padding(.bottom,22).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
                                 Button("８", action:{}).font(.title).foregroundColor(.black).padding(.leading,26) .padding(.trailing,26).padding(.top, 22).padding(.bottom,22).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
                                 Button("９", action:{}).font(.title).foregroundColor(.black).padding(.leading,26) .padding(.trailing,26).padding(.top, 22).padding(.bottom,22).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
                             }
@@ -143,4 +148,8 @@ struct ContentView_Previews: PreviewProvider {
                 .previewDevice("iPhone 8 Plus")
         }
     }
+}
+
+func ProcessButton(buttonId: String) {
+    
 }
