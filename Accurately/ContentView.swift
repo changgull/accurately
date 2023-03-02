@@ -25,6 +25,7 @@ struct ContentView: View {
     @State var mem:[String:Double] = ["0":0.0, "1":0.0, "2":0.0, "3":0.0, "4":0.0, "5":0.0, "6":0.0, "7":0.0, "8":0.0, "9":0.0]
     @State var vpy = 12
     @State var amortizationSchedule = "Compute PMT to see the schedule"
+    @State var clearTvm = false
     
     let yellowColor = Color(hue: 0.13, saturation: 0.3, brightness: 0.99)
     let lineColor = Color(hue: 1.0, saturation: 0.0, brightness: 0.8)
@@ -47,11 +48,11 @@ struct ContentView: View {
                                 .padding(10.0)
                                 .overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
                             Text(operatorText)
-                                .font(.title2)
+                                .font(.system(size:14))
                                 .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, idealWidth: 250, maxWidth: 280, minHeight: 50, idealHeight: 70, maxHeight: 70, alignment: .topLeading)
                                 .padding(10.0)
                             Text(storageText)
-                                .font(.title2)
+                                .font(.system(size:14))
                                 .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, idealWidth: 150, maxWidth: 200, minHeight: 50, idealHeight: 70, maxHeight: 70, alignment: .topTrailing)
                                 .padding(10.0)
 
@@ -189,39 +190,44 @@ struct ContentView: View {
                     Spacer()
                     Text("Accurately Finacial Calculator").underline()
                     brick
-                    HStack(alignment: .center) {
-                        Text("Payments per Year")
-                        Button("12", action:{
-                            vpy = 12
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: vpy == 12))
-                        Button("4", action:{
-                            vpy = 4
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: vpy == 4))
-                        Button("1", action:{
-                            vpy = 1
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: vpy == 1))
-                    }
-                    HStack(alignment: .center) {
-                        Text("Display precision")
-                        Button("0", action:{
-                            setDecimalDigits(digit: 0)
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 0))
-                        Button("1", action:{
-                            setDecimalDigits(digit: 1)
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 1))
-                        Button("2", action:{
-                            setDecimalDigits(digit: 2)
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 2))
-                        Button("3", action:{
-                            setDecimalDigits(digit: 3)
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 3))
-                        Button("4", action:{
-                            setDecimalDigits(digit: 4)
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 4))
-                        Button("5", action:{
-                            setDecimalDigits(digit: 5)
-                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 5))
-                    }
+                    VStack {
+                        brick
+                        HStack(alignment: .center) {
+                            Text("Payments per Year")
+                            Button("12", action:{
+                                vpy = 12
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: vpy == 12))
+                            Button("4", action:{
+                                vpy = 4
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: vpy == 4))
+                            Button("1", action:{
+                                vpy = 1
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: vpy == 1))
+                        }
+                        HStack(alignment: .center) {
+                            Text("Display precision")
+                            Button("0", action:{
+                                setDecimalDigits(digit: 0)
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 0))
+                            Button("1", action:{
+                                setDecimalDigits(digit: 1)
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 1))
+                            Button("2", action:{
+                                setDecimalDigits(digit: 2)
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 2))
+                            Button("3", action:{
+                                setDecimalDigits(digit: 3)
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 3))
+                            Button("4", action:{
+                                setDecimalDigits(digit: 4)
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 4))
+                            Button("5", action:{
+                                setDecimalDigits(digit: 5)
+                            }).font(.headline).foregroundColor(navyColor).padding(10).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 5))
+                        }
+                        Toggle("Hit C twice to clear TVM", isOn: $clearTvm).frame(width: 250)
+                        brick
+                    }.background(Color.white)
                     brick
                     Button("Amortization Schedule") {
                         viewMode = ViewMode.AmortizationSchedule
@@ -243,9 +249,14 @@ struct ContentView: View {
                         }
                     }
                     brick
-                    Button("Back") {
-                        viewMode = ViewMode.Calculator
-                    }.font(.headline).foregroundColor(oliveColor).padding(13).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
+                    HStack(alignment: .center) {
+                        Button("Copy to Clipboard") {
+                            UIPasteboard.general.string = amortizationSchedule
+                        }.font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
+                        Button("Back") {
+                            viewMode = ViewMode.Calculator
+                        }.font(.headline).foregroundColor(oliveColor).padding(13).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
+                    }
                     Spacer()
                 }
             }
@@ -286,6 +297,14 @@ struct ContentView: View {
             }
             if operatorText.count == 0 {
                 operand = 0.0
+            }
+            if cleared && clearTvm {
+                tvm["N"] = 0.0
+                tvm["I/Y"] = 0.0
+                tvm["PV"] = 0.0
+                tvm["PMT"] = 0.0
+                tvm["FV"] = 0.0
+                amortizationSchedule = "Compute PMT to see the schedule"
             }
             numberRawText = ""
             storageText = ""
@@ -389,7 +408,11 @@ struct ContentView: View {
             } else {
                 value = -vi*(vpv + (vpv+vfv)/(pow(1+vi,vn)-1))
             }
-            amortizationSchedule = processAmortSchedule(vn:vn, vi:vi, vpv:vpv, vpmt:value, vfv:vfv)
+            if (!value.isNaN) {
+                amortizationSchedule = processAmortSchedule(vn:vn, vi:vi, vpv:vpv, vpmt:value, vfv:vfv)
+            } else {
+                amortizationSchedule = "Compute a finite PMT to see the schedule"
+            }
         } else if computeFor == "FV" {
             if vi==0 {
                 value = -(vpv + vpmt*vn)
