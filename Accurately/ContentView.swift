@@ -20,6 +20,8 @@ struct ContentView: View {
     @State var numberRawText = ""
     @State var operand = 0.0
     @State var cleared = false
+    @State var tvm:[String:Double] = ["N":0.0, "I/Y":0.0, "PV":0.0, "PMT":0.0, "FV":0.0]
+    @State var vpy = 12.0
     
     var body: some View {
         let lineColor = Color(hue: 1.0, saturation: 0.0, brightness: 0.8)
@@ -221,9 +223,99 @@ struct ContentView: View {
         case "÷","×","−","+","＝":
             processOperatorButton(buttonId: buttonId)
             cleared = false
+        case "N","I/Y","PV","PMT","FV":
+            if operatorText.contains("COMPUTE") {
+                let vn = tvm["N"]!
+                let vapr = tvm["I/Y"]! * 0.01
+                let vpv = tvm["PV"]!
+                let vpmt = tvm["PMT"]!
+                let vfv = tvm["FV"]!
+                let vi = vapr / vpy
+                
+                operand = computeTvm(computeFor: buttonId, vn: vn, vi: vi, vpv: vpv, vpmt: vpmt, vfv: vfv)
+                displayNumber = formattedNumber(value: operand)
+                numberRawText = ""
+            } else {
+                tvm[buttonId] = Double(numberRawText) ?? operand
+            }
+        case "CPT":
+            operatorText = "COMPUTE (N,I/Y,PV,PMT,FV)"
         default:
             break
         }
+    }
+    
+    func computeTvm(computeFor: String, vn: Double, vi: Double, vpv: Double, vpmt: Double, vfv: Double) -> Double {
+        let DELTA: Double = 1E-5
+        let TOLERANCE: Double = 1E20
+        let MAX_ITER: Int = 1000
+        var value = 0.0
+
+        if computeFor == "N" {
+            if vi==0 {
+                value = -(vpv + vfv)/vpmt
+            } else {
+                let v1 = vpmt - vfv*vi
+                let v2 = vpmt + vpv*vi
+                
+                value = log(v1/v2)/log(1+vi)
+            }
+        } else if computeFor == "I/Y" {
+            var v: Double = 0.0
+            if vpmt == 0 {
+                v = pow(-vfv/vpv, 1/vn)-1
+            } else {
+                let vd = vpv+vpmt*vn+vfv
+                if (vd == 0) {
+                    v=0.0
+                } else {
+                    var vsign = 0.0
+                    if vd < 0 {vsign = 1.0}
+                    else {vsign = -1.0}
+
+                    v = DELTA*vsign; // starts from finite plus or minus
+                    let pvn = pow(1+v, -vn)
+                    var vf = vpv + vpmt * (1-pvn)/v + vfv*pvn
+                    var testfunc = vd/vf
+
+                    var iter=0
+
+                    while (testfunc < TOLERANCE)
+                    {
+                        let step1 = pow(1+v,-vn-1)
+                        let step2 = pow(1+v,-vn)
+                        let slope = vpmt*(vn*step1/v+(step2-1)/v/v)-vfv*vn*step1
+                        v = v - vf/slope
+                        vf = vpv + vpmt * (1-pow(1+v, -vn))/v + vfv*pow(1+v,-vn)
+                        if iter > MAX_ITER {break}
+                        iter += 1
+                        testfunc = vd/vf
+                    }
+                }
+            }
+            value = vpy * v * 100.0
+        } else if computeFor == "PV" {
+            if vi==0 {
+                value = -(vfv + vpmt*vn)
+            } else {
+                value = (vpmt/vi-vfv)*pow(1+vi,-vn) - vpmt/vi
+            }
+        } else if computeFor == "PMT" {
+            if vi==0 {
+                value = -(vpv + vfv)/vn
+            } else {
+                value = -vi*(vpv + (vpv+vfv)/(pow(1+vi,vn)-1))
+            }
+//            appDel.amortSchedule = processAmortSchedule(vn, vapr/MULT_APR, vi, vpv, value, vfv)
+        } else if computeFor == "FV" {
+            if vi==0 {
+                value = -(vpv + vpmt*vn)
+            } else {
+                value = -(vpmt/vi+vpv)*pow(1+vi,vn) + vpmt/vi
+            }
+        }
+        
+        return value
     }
     
     func processOperatorButton(buttonId: String) {
