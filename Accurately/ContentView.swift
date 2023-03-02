@@ -17,12 +17,14 @@ struct ContentView: View {
     @State var displayNumber = "0.00"
     @State var viewMode = ViewMode.Calculator
     @State var operatorText = ""
+    @State var storageText = ""
     @State var numberRawText = ""
     @State var operand = 0.0
     @State var cleared = false
     @State var tvm:[String:Double] = ["N":0.0, "I/Y":0.0, "PV":0.0, "PMT":0.0, "FV":0.0]
+    @State var mem:[String:Double] = ["0":0.0, "1":0.0, "2":0.0, "3":0.0, "4":0.0, "5":0.0, "6":0.0, "7":0.0, "8":0.0, "9":0.0]
     @State var vpy = 12.0
-    
+        
     var body: some View {
         let lineColor = Color(hue: 1.0, saturation: 0.0, brightness: 0.8)
         let oliveColor = Color(hue: 0.4, saturation: 0.2, brightness: 0.6)
@@ -45,6 +47,11 @@ struct ContentView: View {
                                 .font(.title2)
                                 .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, idealWidth: 250, maxWidth: 280, minHeight: 50, idealHeight: 70, maxHeight: 70, alignment: .topLeading)
                                 .padding(10.0)
+                            Text(storageText)
+                                .font(.title2)
+                                .frame(minWidth: /*@START_MENU_TOKEN@*/0/*@END_MENU_TOKEN@*/, idealWidth: 150, maxWidth: 200, minHeight: 50, idealHeight: 70, maxHeight: 70, alignment: .topTrailing)
+                                .padding(10.0)
+
                         }
                         Button("C", action:{
                             processButton(buttonId: "c")
@@ -218,13 +225,14 @@ struct ContentView: View {
                 operand = 0.0
             }
             numberRawText = ""
+            storageText = ""
             displayNumber = formattedNumber()
             cleared = true
         case "÷","×","−","+","＝":
             processOperatorButton(buttonId: buttonId)
             cleared = false
         case "N","I/Y","PV","PMT","FV":
-            if operatorText.contains("COMPUTE") {
+            if operatorText == "CPT" {
                 let vn = tvm["N"]!
                 let vapr = tvm["I/Y"]! * 0.01
                 let vpv = tvm["PV"]!
@@ -233,13 +241,25 @@ struct ContentView: View {
                 let vi = vapr / vpy
                 
                 operand = computeTvm(computeFor: buttonId, vn: vn, vi: vi, vpv: vpv, vpmt: vpmt, vfv: vfv)
-                displayNumber = formattedNumber(value: operand)
-                numberRawText = ""
+                tvm[buttonId] = operand
+            } else if operatorText == "RCL" {
+                operand = tvm[buttonId]!
             } else {
                 tvm[buttonId] = Double(numberRawText) ?? operand
+                operand = tvm[buttonId]!
             }
-        case "CPT":
-            operatorText = "COMPUTE (N,I/Y,PV,PMT,FV)"
+            displayNumber = formattedNumber(value: operand)
+            storageText = buttonId + " ="
+            numberRawText = ""
+            operatorText = ""
+        case "CPT", "RCL":
+            operatorText = buttonId
+            storageText = ""
+        case "STO":
+            operatorText = buttonId
+            operand = Double(numberRawText) ?? operand
+            displayNumber = formattedNumber(value: operand)
+            numberRawText = ""
         default:
             break
         }
@@ -348,38 +368,56 @@ struct ContentView: View {
             }
         }
         numberRawText = ""
+        storageText = ""
     }
     
     func processNumberButton(buttonId: String) {
-        if buttonId == "+/-" {
-            if numberRawText.count > 0 {
-                if numberRawText.hasPrefix("-") {
-                    numberRawText = String(numberRawText.suffix(numberRawText.count - 1))
-                } else {
-                    numberRawText = "-" + numberRawText
-                }
-            } else if operand != 0.0 {
-                operand *= -1.0
-                displayNumber = formattedNumber(value: operand)
+        if operatorText == "STO" {
+            operatorText = ""
+            if mem.keys.contains(buttonId) {
+                storageText = "MEM " + buttonId + " ="
+                mem[buttonId] = operand
             }
-        } else if buttonId == "." {
-            if !numberRawText.contains(".") {
-                if numberRawText.count == 0 {
-                    numberRawText = "0"
-                }
-                numberRawText += buttonId
+        } else if operatorText == "RCL" {
+            operatorText = ""
+            if mem.keys.contains(buttonId) {
+                storageText = "MEM " + buttonId + " ="
+                operand = mem[buttonId]!
+                displayNumber = formattedNumber(value: operand)
+                numberRawText = ""
             }
         } else {
-            if (numberRawText == "0") {
-                numberRawText = buttonId
-            } else if (numberRawText == "-0") {
-                numberRawText = "-" + buttonId
+            if buttonId == "+/-" {
+                if numberRawText.count > 0 {
+                    if numberRawText.hasPrefix("-") {
+                        numberRawText = String(numberRawText.suffix(numberRawText.count - 1))
+                    } else {
+                        numberRawText = "-" + numberRawText
+                    }
+                } else if operand != 0.0 {
+                    operand *= -1.0
+                    displayNumber = formattedNumber(value: operand)
+                }
+            } else if buttonId == "." {
+                if !numberRawText.contains(".") {
+                    if numberRawText.count == 0 {
+                        numberRawText = "0"
+                    }
+                    numberRawText += buttonId
+                }
             } else {
-                numberRawText += buttonId
+                if (numberRawText == "0") {
+                    numberRawText = buttonId
+                } else if (numberRawText == "-0") {
+                    numberRawText = "-" + buttonId
+                } else {
+                    numberRawText += buttonId
+                }
             }
-        }
-        if (numberRawText.count > 0) {
-            displayNumber = numberRawText
+            if (numberRawText.count > 0) {
+                displayNumber = numberRawText
+            }
+            storageText = ""
         }
     }
 }
