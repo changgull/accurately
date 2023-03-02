@@ -23,12 +23,15 @@ struct ContentView: View {
     @State var cleared = false
     @State var tvm:[String:Double] = ["N":0.0, "I/Y":0.0, "PV":0.0, "PMT":0.0, "FV":0.0]
     @State var mem:[String:Double] = ["0":0.0, "1":0.0, "2":0.0, "3":0.0, "4":0.0, "5":0.0, "6":0.0, "7":0.0, "8":0.0, "9":0.0]
-    @State var vpy = 12.0
-        
+    @State var vpy = 12
+    @State var amortizationSchedule = "Compute PMT to see the schedule"
+    
+    let yellowColor = Color(hue: 0.13, saturation: 0.3, brightness: 0.99)
+    let lineColor = Color(hue: 1.0, saturation: 0.0, brightness: 0.8)
+    let oliveColor = Color(hue: 0.4, saturation: 0.2, brightness: 0.6)
+    let navyColor = Color(hue: 0.6, saturation: 0.4, brightness: 0.6)
+
     var body: some View {
-        let lineColor = Color(hue: 1.0, saturation: 0.0, brightness: 0.8)
-        let oliveColor = Color(hue: 0.4, saturation: 0.2, brightness: 0.6)
-        let navyColor = Color(hue: 0.6, saturation: 0.4, brightness: 0.6)
         let brick = Rectangle().frame(minWidth: 0, idealWidth: 0, maxWidth: 5, minHeight: 0, idealHeight: 0, maxHeight: 5, alignment: .center).opacity(/*@START_MENU_TOKEN@*/0.0/*@END_MENU_TOKEN@*/)
         let mold = RoundedRectangle(cornerRadius: 10).stroke(lineColor, lineWidth: 2)
         return ZStack {
@@ -183,27 +186,87 @@ struct ContentView: View {
                 }
             } else if viewMode == ViewMode.Options {
                 VStack {
-                    Text("Yo, this is options")
-                    Button("Back") {
-                        viewMode = ViewMode.Calculator
+                    Spacer()
+                    Text("Accurately Finacial Calculator").underline()
+                    brick
+                    HStack(alignment: .center) {
+                        Text("Payments per Year")
+                        Button("12", action:{
+                            vpy = 12
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: vpy == 12))
+                        Button("4", action:{
+                            vpy = 4
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: vpy == 4))
+                        Button("1", action:{
+                            vpy = 1
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: vpy == 1))
                     }
+                    HStack(alignment: .center) {
+                        Text("Display precision")
+                        Button("0", action:{
+                            setDecimalDigits(digit: 0)
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 0))
+                        Button("1", action:{
+                            setDecimalDigits(digit: 1)
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 1))
+                        Button("2", action:{
+                            setDecimalDigits(digit: 2)
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 2))
+                        Button("3", action:{
+                            setDecimalDigits(digit: 3)
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 3))
+                        Button("4", action:{
+                            setDecimalDigits(digit: 4)
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 4))
+                        Button("5", action:{
+                            setDecimalDigits(digit: 5)
+                        }).font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(buttonBackgroundColor(selected: decimalDigits == 5))
+                    }
+                    brick
                     Button("Amortization Schedule") {
                         viewMode = ViewMode.AmortizationSchedule
-                    }
+                    }.font(.headline).foregroundColor(navyColor).padding(13).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
+                    brick
+                    Button("Back") {
+                        viewMode = ViewMode.Calculator
+                    }.font(.headline).foregroundColor(oliveColor).padding(13).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
+                    Spacer()
                 }
             } else if viewMode == ViewMode.AmortizationSchedule {
                 VStack {
-                    Text("Amortization Schedule")
+                    Spacer()
+                    VStack {
+                        Text("Amortization Schedule").underline()
+                        brick
+                        ScrollView() {
+                            Text(amortizationSchedule).background(Color.white).font(Font.system(size: 12, design: .monospaced))
+                        }
+                    }
+                    brick
                     Button("Back") {
                         viewMode = ViewMode.Calculator
-                    }
+                    }.font(.headline).foregroundColor(oliveColor).padding(13).overlay(mold).background(/*@START_MENU_TOKEN@*//*@PLACEHOLDER=View@*/Color.white/*@END_MENU_TOKEN@*/)
+                    Spacer()
                 }
             }
         }
     }
     
+    func setDecimalDigits(digit: Int) {
+        decimalDigits = digit
+        displayNumber = formattedNumber()
+    }
+    
+    func buttonBackgroundColor(selected: Bool) -> Color {
+        if selected {
+            return yellowColor
+        } else {
+            return Color.white
+        }
+    }
+    
     func formattedNumber() -> String {
-        return formattedNumber(value: Double(numberRawText) ?? 0.0)
+        return formattedNumber(value: Double(numberRawText) ?? operand)
     }
     
     func formattedNumber(value: Double) -> String {
@@ -238,7 +301,7 @@ struct ContentView: View {
                 let vpv = tvm["PV"]!
                 let vpmt = tvm["PMT"]!
                 let vfv = tvm["FV"]!
-                let vi = vapr / vpy
+                let vi = vapr / Double(vpy)
                 
                 operand = computeTvm(computeFor: buttonId, vn: vn, vi: vi, vpv: vpv, vpmt: vpmt, vfv: vfv)
                 tvm[buttonId] = operand
@@ -313,7 +376,7 @@ struct ContentView: View {
                     }
                 }
             }
-            value = vpy * v * 100.0
+            value = Double(vpy) * v * 100.0
         } else if computeFor == "PV" {
             if vi==0 {
                 value = -(vfv + vpmt*vn)
@@ -326,7 +389,7 @@ struct ContentView: View {
             } else {
                 value = -vi*(vpv + (vpv+vfv)/(pow(1+vi,vn)-1))
             }
-//            appDel.amortSchedule = processAmortSchedule(vn, vapr/MULT_APR, vi, vpv, value, vfv)
+            amortizationSchedule = processAmortSchedule(vn:vn, vi:vi, vpv:vpv, vpmt:value, vfv:vfv)
         } else if computeFor == "FV" {
             if vi==0 {
                 value = -(vpv + vpmt*vn)
@@ -420,13 +483,43 @@ struct ContentView: View {
             storageText = ""
         }
     }
+    
+    func processAmortSchedule(vn:Double, vi:Double, vpv:Double, vpmt:Double, vfv:Double) -> String {
+        let vapr = vi * Double(vpy) * 100.0
+        var msg: String
+        msg  = "N  : " + String(vn) + "\n"
+        msg += "APR: " + formattedNumber(value: vapr) + "\n"
+        msg += "PV : " + formattedNumber(value: vpv) + "\n"
+        msg += "PMT: " + formattedNumber(value: vpmt) + "\n"
+        msg += "FV : " + formattedNumber(value: vfv) + "\n"
+        msg += "\n"
+        msg += "Period  Interest  Principal    Balance\n"
+        var prevBalance: Double = -vpv
+        for i in 1...Int(vn) {
+            var balance: Double = 0.0
+            if vi==0 {
+                balance = -(vpv + vpmt*Double(i))
+            } else {
+                balance = -(vpmt/vi+vpv)*pow(1+vi,Double(i)) + vpmt/vi
+            }
+            let principal = prevBalance - balance
+            let interest = vpmt - principal
+
+            msg += String(format: "%5d ", i)
+            msg += String(format: "%10.0f ", abs(interest))
+            msg += String(format: "%10.0f ", abs(principal))
+            msg += String(format: "%10.0f\n", abs(balance))
+
+            prevBalance = balance
+        }
+        return msg
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             ContentView()
-                .previewDevice("iPhone 8 Plus")
         }
     }
 }
